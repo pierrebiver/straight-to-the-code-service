@@ -26,8 +26,7 @@ func GetSession() (*mgo.Session, error) {
 	return newSession, nil
 }
 
-
-func Descriptors() ([]model.Descriptor,error) {
+func Descriptors() ([]model.Descriptor, error) {
 	session, _ := GetSession()
 	defer session.Close()
 	db := session.DB(DBName)
@@ -37,6 +36,17 @@ func Descriptors() ([]model.Descriptor,error) {
 	logError(err)
 
 	return descriptors, err
+}
+
+func Add(d *model.DescriptorInput) (error) {
+	session, _ := GetSession()
+	defer session.Close()
+	db := session.DB(DBName)
+
+	err := db.C("descriptors").Insert(&d)
+	logError(err)
+
+	return err
 }
 
 func logError(err error) {

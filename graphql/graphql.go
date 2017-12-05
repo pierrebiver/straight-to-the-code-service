@@ -1,25 +1,35 @@
 package graphql
 
 import (
-	"github.com/straight-to-the-code-service/model"
 	"github.com/neelance/graphql-go"
+	"github.com/straight-to-the-code-service/model"
 	"github.com/straight-to-the-code-service/mongo"
 )
 
 var Schema = `
 	schema {
 		query: Query
+		mutation: Mutation
 	}
 
 	type Query {
-		descriptors(): [Descriptor!]!
+		descriptors(): [Descriptor]
+	}
+
+	type Mutation {
+		add(descriptor: DescriptorInput!): Descriptor
+	}
+
+	input DescriptorInput {
+		name: String!
+		Description: String
+		tags: [String!]!
 	}
 
 	type Descriptor {
 		id: ID!
 		name: String!
 		Description: String
-		Example: String
 		tags: [String!]!
 	}
 `
@@ -27,36 +37,43 @@ var Schema = `
 type Resolver struct{}
 
 type descriptorResolver struct {
-	descriptor model.Descriptor
+	Descriptor model.Descriptor
+}
+
+type DescriptorArgs struct {
+	Descriptor *model.DescriptorInput
 }
 
 func (d *descriptorResolver) ID() graphql.ID {
-	return d.descriptor.ID
+	return d.Descriptor.ID
 }
 
 func (d *descriptorResolver) Name() string {
-	return d.descriptor.Name
+	return d.Descriptor.Name
 }
 
 func (d *descriptorResolver) Description() *string {
-	return &d.descriptor.Description
-}
-
-func (d *descriptorResolver) Example() *string {
-	return &d.descriptor.Example
+	return &d.Descriptor.Description
 }
 
 func (d *descriptorResolver) Tags() []string {
-	return d.descriptor.Tags
+	return d.Descriptor.Tags
 }
 
-func (r *Resolver) Descriptors() []descriptorResolver {
+func (r *Resolver) Descriptors() *[]*descriptorResolver {
 	descriptors, _ := mongo.Descriptors()
 
-	descriptorResolvers := make([]descriptorResolver, 0)
+	descriptorResolvers := make([]*descriptorResolver, 0)
 	for _, d := range descriptors {
-		descriptorResolvers = append(descriptorResolvers, descriptorResolver{d})
+		descriptorResolvers = append(descriptorResolvers, &descriptorResolver{d})
 	}
 
-	return descriptorResolvers
+	return &descriptorResolvers
+}
+
+func (r *Resolver) Add(args DescriptorArgs) *descriptorResolver {
+	input := args.Descriptor
+	mongo.Add(input)
+
+	return &descriptorResolver{model.Descriptor{ID: input.ID, Name: input.Name, Description: *input.Description, Tags: input.Tags}}
 }
