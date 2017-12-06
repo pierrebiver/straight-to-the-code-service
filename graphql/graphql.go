@@ -4,6 +4,7 @@ import (
 	"github.com/neelance/graphql-go"
 	"github.com/straight-to-the-code-service/model"
 	"github.com/straight-to-the-code-service/mongo"
+	"fmt"
 )
 
 var Schema = `
@@ -22,14 +23,14 @@ var Schema = `
 
 	input DescriptorInput {
 		name: String!
-		Description: String
+		description: String
 		tags: [String!]!
 	}
 
 	type Descriptor {
 		id: ID!
 		name: String!
-		Description: String
+		description: String
 		tags: [String!]!
 	}
 `
@@ -74,6 +75,7 @@ func (r *Resolver) Descriptors() *[]*descriptorResolver {
 func (r *Resolver) Add(args DescriptorArgs) *descriptorResolver {
 	input := args.Descriptor
 	mongo.Add(input)
+	fmt.Print(input)
 
 	return &descriptorResolver{model.Descriptor{ID: input.ID, Name: input.Name, Description: *input.Description, Tags: input.Tags}}
 }

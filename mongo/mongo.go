@@ -5,6 +5,8 @@ import (
 	"log"
 	"github.com/straight-to-the-code-service/model"
 	"gopkg.in/mgo.v2/bson"
+	"github.com/nu7hatch/gouuid"
+	"github.com/neelance/graphql-go"
 )
 
 var session *mgo.Session
@@ -43,6 +45,8 @@ func Add(d *model.DescriptorInput) (error) {
 	defer session.Close()
 	db := session.DB(DBName)
 
+	id, _ := uuid.NewV4()
+	d.ID = graphql.ID(id.String())
 	err := db.C("descriptors").Insert(&d)
 	logError(err)
 
