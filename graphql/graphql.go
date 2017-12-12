@@ -4,7 +4,6 @@ import (
 	"github.com/neelance/graphql-go"
 	"github.com/straight-to-the-code-service/model"
 	"github.com/straight-to-the-code-service/mongo"
-	"fmt"
 )
 
 var Schema = `
@@ -19,9 +18,12 @@ var Schema = `
 
 	type Mutation {
 		add(descriptor: DescriptorInput!): Descriptor
+		edit(descriptor: DescriptorInput!): Descriptor
+		delete(descriptorId: ID!): String
 	}
 
 	input DescriptorInput {
+		id: ID
 		name: String!
 		description: String
 		tags: [String!]!
@@ -41,7 +43,7 @@ type descriptorResolver struct {
 	Descriptor model.Descriptor
 }
 
-type DescriptorArgs struct {
+type DescriptorInputArgs struct {
 	Descriptor *model.DescriptorInput
 }
 
@@ -72,10 +74,25 @@ func (r *Resolver) Descriptors() *[]*descriptorResolver {
 	return &descriptorResolvers
 }
 
-func (r *Resolver) Add(args DescriptorArgs) *descriptorResolver {
+func (r *Resolver) Add(args DescriptorInputArgs) *descriptorResolver {
 	input := args.Descriptor
 	mongo.Add(input)
-	fmt.Print(input)
 
-	return &descriptorResolver{model.Descriptor{ID: input.ID, Name: input.Name, Description: *input.Description, Tags: input.Tags}}
+	return &descriptorResolver{model.Descriptor{ID: *input.ID, Name: input.Name, Description: *input.Description, Tags: input.Tags}}
+}
+
+func (r *Resolver) Edit(args DescriptorInputArgs) *descriptorResolver {
+	input := args.Descriptor
+	mongo.Edit(input)
+
+	return &descriptorResolver{model.Descriptor{ID: *input.ID, Name: input.Name, Description: *input.Description, Tags: input.Tags}}
+}
+
+func (r *Resolver) Delete(args struct {
+	DescriptorID graphql.ID
+}) *string {
+	mongo.Delete(args.DescriptorID)
+
+	msg := "Delete Done"
+	return &msg;
 }
