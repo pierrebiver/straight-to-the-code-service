@@ -11,9 +11,8 @@ type Descriptor struct {
 	Tags        []string   `bson:"tags" json:"tags"`
 }
 
-type DescriptorInput struct {
-	ID          *graphql.ID `bson:"_id" json:"id"`
+type DescriptorAddInput struct {
 	Name        string     `bson:"name" json:"name"`
-	Description *string    `bson:"description" json:"description"`
+	Description string    `bson:"description" json:"description"`
 	Tags        []string   `bson:"tags" json:"tags"`
 }

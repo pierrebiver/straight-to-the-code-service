@@ -40,20 +40,20 @@ func Descriptors() ([]model.Descriptor, error) {
 	return descriptors, err
 }
 
-func Add(d *model.DescriptorInput) (error) {
+func Add(d *model.Descriptor) (error) {
 	session, _ := GetSession()
 	defer session.Close()
 	db := session.DB(DBName)
 
 	id, _ := uuid.NewV4()
-	*d.ID = graphql.ID(id.String())
+	d.ID = graphql.ID(id.String())
 	err := db.C("descriptors").Insert(&d)
 	logError(err)
 
 	return err
 }
 
-func Edit(d *model.DescriptorInput) (error) {
+func Edit(d *model.Descriptor) (error) {
 	session, _ := GetSession()
 	defer session.Close()
 

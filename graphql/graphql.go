@@ -17,22 +17,28 @@ var Schema = `
 	}
 
 	type Mutation {
-		add(descriptor: DescriptorInput!): Descriptor
-		edit(descriptor: DescriptorInput!): Descriptor
+		add(descriptor: DescriptorAddInput!): Descriptor
+		edit(descriptor: DescriptorEditInput!): Descriptor
 		delete(descriptorId: ID!): String
 	}
 
-	input DescriptorInput {
-		id: ID
+	input DescriptorEditInput {
+		id: ID!
 		name: String!
-		description: String
+		description: String!
+		tags: [String!]!
+	}
+
+	input DescriptorAddInput {
+		name: String!
+		description: String!
 		tags: [String!]!
 	}
 
 	type Descriptor {
 		id: ID!
 		name: String!
-		description: String
+		description: String!
 		tags: [String!]!
 	}
 `
@@ -43,8 +49,8 @@ type descriptorResolver struct {
 	Descriptor model.Descriptor
 }
 
-type DescriptorInputArgs struct {
-	Descriptor *model.DescriptorInput
+type DescriptorEditInputArgs struct {
+	Descriptor *model.Descriptor
 }
 
 func (d *descriptorResolver) ID() graphql.ID {
@@ -55,12 +61,16 @@ func (d *descriptorResolver) Name() string {
 	return d.Descriptor.Name
 }
 
-func (d *descriptorResolver) Description() *string {
-	return &d.Descriptor.Description
+func (d *descriptorResolver) Description() string {
+	return d.Descriptor.Description
 }
 
 func (d *descriptorResolver) Tags() []string {
 	return d.Descriptor.Tags
+}
+
+type DescriptorAddArgs struct {
+	Descriptor *model.DescriptorAddInput
 }
 
 func (r *Resolver) Descriptors() *[]*descriptorResolver {
@@ -74,18 +84,18 @@ func (r *Resolver) Descriptors() *[]*descriptorResolver {
 	return &descriptorResolvers
 }
 
-func (r *Resolver) Add(args DescriptorInputArgs) *descriptorResolver {
+func (r *Resolver) Add(args DescriptorAddArgs) *descriptorResolver {
 	input := args.Descriptor
-	mongo.Add(input)
-
-	return &descriptorResolver{model.Descriptor{ID: *input.ID, Name: input.Name, Description: *input.Description, Tags: input.Tags}}
+	descriptor := model.Descriptor{ID: "", Name: input.Name, Description: input.Description, Tags: input.Tags}
+	mongo.Add(&descriptor)
+	return &descriptorResolver{descriptor}
 }
 
-func (r *Resolver) Edit(args DescriptorInputArgs) *descriptorResolver {
+func (r *Resolver) Edit(args DescriptorEditInputArgs) *descriptorResolver {
 	input := args.Descriptor
 	mongo.Edit(input)
 
-	return &descriptorResolver{model.Descriptor{ID: *input.ID, Name: input.Name, Description: *input.Description, Tags: input.Tags}}
+	return &descriptorResolver{ *input}
 }
 
 func (r *Resolver) Delete(args struct {
@@ -94,5 +104,5 @@ func (r *Resolver) Delete(args struct {
 	mongo.Delete(args.DescriptorID)
 
 	msg := "Delete Done"
-	return &msg;
+	return &msg
 }
